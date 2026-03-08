@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard DB Vertrieb – Cuatro Pivotes Estratégicos</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #0F1923 0%, #1A2E4A 50%, #0A1A30 100%);
+        color: #333;
+        min-height: 100vh;
+        padding: 20px;
+    }
+
+    .container { max-width: 1400px; margin: 0 auto; }
+
+    header {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 25px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        border-left: 8px solid #1E3A5F;
+    }
+
+    .header-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    header h1 { color: #0F1923; font-size: 2.2em; margin-bottom: 8px; }
+    .header-sub { color: #555; font-size: 1.05em; margin-bottom: 6px; }
+    .header-meta { color: #999; font-size: 0.9em; }
+
+    .header-badges { display: flex; gap: 10px; flex-wrap: wrap; }
+    .hbadge {
+        padding: 8px 16px; border-radius: 20px;
+        font-size: 0.8em; font-weight: 700; color: white;
+    }
+    .hbadge.p1 { background: #0D9488; }
+    .hbadge.p2 { background: #2563EB; }
+    .hbadge.p3 { background: #D97706; }
+    .hbadge.p4 { background: #7C3AED; }
+
+    nav {
+        background: white;
+        border-radius: 15px;
+        padding: 18px 22px;
+        margin-bottom: 25px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .nav-btn {
+        border: none; padding: 11px 22px; border-radius: 25px;
+        cursor: pointer; font-size: 0.95em; font-weight: 600;
+        transition: all 0.3s; background: #f0f4f8; color: #555;
+    }
+    .nav-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.15); }
+    .nav-btn.active-overview { background: linear-gradient(135deg, #0F1923, #1A2E4A); color: white; }
+    .nav-btn.active-p1  { background: #0D9488; color: white; }
+    .nav-btn.active-p2  { background: #2563EB; color: white; }
+    .nav-btn.active-p3  { background: #D97706; color: white; }
+    .nav-btn.active-p4  { background: #7C3AED; color: white; }
+    .nav-btn.active-just { background: linear-gradient(135deg, #374151, #1F2937); color: white; }
+
+    .section { display: none; }
+    .section.active { display: block; }
+
+    .card {
+        background: white; border-radius: 15px;
+        padding: 30px; margin-bottom: 25px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+
+    .card-title {
+        font-size: 1.5em; font-weight: 700;
+        margin-bottom: 18px; padding-bottom: 14px; border-bottom: 3px solid;
+    }
+    .ct-p1   { color: #0D9488; border-color: #0D9488; }
+    .ct-p2   { color: #2563EB; border-color: #2563EB; }
+    .ct-p3   { color: #D97706; border-color: #D97706; }
+    .ct-p4   { color: #7C3AED; border-color: #7C3AED; }
+    .ct-gray { color: #0F1923; border-color: #0F1923; }
+
+    .indicator-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 20px; margin: 20px 0;
+    }
+
+    .indicator-card {
+        border: 2px solid; border-radius: 10px;
+        padding: 20px; text-align: center; transition: transform 0.2s;
+    }
+    .indicator-card:hover { transform: translateY(-4px); }
+    .ic-p1 { border-color: #0D9488; }
+    .ic-p2 { border-color: #2563EB; }
+    .ic-p3 { border-color: #D97706; }
+    .ic-p4 { border-color: #7C3AED; }
+
+    .ic-label {
+        font-size: 0.75em; font-weight: 700;
+        letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px;
+    }
+    .ic-label.p1 { color: #0D9488; }
+    .ic-label.p2 { color: #2563EB; }
+    .ic-label.p3 { color: #D97706; }
+    .ic-label.p4 { color: #7C3AED; }
+
+    .ic-desc { font-size: 0.88em; color: #666; margin: 8px 0 14px; line-height: 1.5; }
+    .ic-value { font-size: 2.6em; font-weight: 800; }
+    .v-p1 { color: #0D9488; }
+    .v-p2 { color: #2563EB; }
+    .v-p3 { color: #D97706; }
+    .v-p4 { color: #7C3AED; }
+    .ic-sub { font-size: 0.82em; color: #999; margin-top: 5px; }
+
+    .cap-badge {
+        display: inline-block; padding: 6px 16px;
+        border-radius: 20px; font-weight: 700; font-size: 0.85em;
+    }
+    .sensing     { background: #0D9488; color: white; }
+    .seizing     { background: #2563EB; color: white; }
+    .configuring { background: #D97706; color: white; }
+
+    .obj-desc {
+        padding: 18px 22px; border-radius: 5px;
+        margin: 18px 0; font-size: 1.02em; line-height: 1.7; color: #444;
+        border-left: 5px solid;
+    }
+    .obj-desc.p1 { background: #F0FDFA; border-color: #0D9488; }
+    .obj-desc.p2 { background: #EFF6FF; border-color: #2563EB; }
+    .obj-desc.p3 { background: #FFFBEB; border-color: #D97706; }
+    .obj-desc.p4 { background: #F5F3FF; border-color: #7C3AED; }
+
+    .sub-title {
+        font-size: 1.15em; font-weight: 700;
+        color: #0F1923; margin: 28px 0 14px;
+    }
+    .sub-title.p1 { color: #0A6B62; }
+    .sub-title.p2 { color: #1D4ED8; }
+    .sub-title.p3 { color: #92400E; }
+    .sub-title.p4 { color: #6D28D9; }
+
+    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 0.88em; }
+    th {
+        padding: 12px 14px; text-align: left;
+        font-weight: 700; color: white; font-size: 0.85em;
+    }
+    .th-p1   { background: #0D9488; }
+    .th-p2   { background: #2563EB; }
+    .th-p3   { background: #D97706; }
+    .th-p4   { background: #7C3AED; }
+    .th-gray { background: #0F1923; }
+    td { padding: 11px 14px; border-bottom: 1px solid #eee; vertical-align: top; line-height: 1.5; }
+    tr:hover { background: #f9f9f9; }
+
+    .s-green  { color: #059669; font-weight: 700; }
+    .s-yellow { color: #D97706; font-weight: 700; }
+    .s-red    { color: #DC2626; font-weight: 700; }
+
+    /* ── ACTION BOXES ── */
+    .action-box {
+        padding: 16px 20px;
+        margin-bottom: 14px;
+        border-radius: 5px;
+        color: #1a1a1a !important;
+        font-size: 0.95em;
+        line-height: 1.65;
+    }
+    .action-box * { color: #1a1a1a !important; }
+    .action-box.p1 { background: #E6FAF8; border-left: 5px solid #0D9488; }
+    .action-box.p2 { background: #E8F0FE; border-left: 5px solid #2563EB; }
+    .action-box.p3 { background: #FEF3C7; border-left: 5px solid #D97706; }
+    .action-box.p4 { background: #EDE9FE; border-left: 5px solid #7C3AED; }
+
+    .action-num {
+        font-weight: 800;
+        font-size: 1.0em;
+        display: inline-block;
+        margin-bottom: 4px;
+    }
+    .an-p1 { color: #065F46 !important; }
+    .an-p2 { color: #1E40AF !important; }
+    .an-p3 { color: #92400E !important; }
+    .an-p4 { color: #5B21B6 !important; }
+
+    .chart-container {
+        background: white; border-radius: 15px;
+        padding: 25px; margin-bottom: 25px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+    .chart-title { font-size: 1.1em; font-weight: 700; margin-bottom: 20px; }
+    .ct2-p1   { color: #0D9488; }
+    .ct2-p2   { color: #2563EB; }
+    .ct2-p3   { color: #D97706; }
+    .ct2-p4   { color: #7C3AED; }
+    .ct2-gray { color: #0F1923; }
+
+    .chart-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(440px, 1fr));
+        gap: 24px;
+    }
+
+    .info-box {
+        background: #F0F9FF; border-left: 5px solid #1A2E4A;
+        padding: 18px 22px; border-radius: 5px;
+        margin: 18px 0; font-size: 1em; line-height: 1.7; color: #444;
+    }
+
+    .just-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+        gap: 22px; margin-top: 22px;
+    }
+
+    .just-card { border: 2px solid; border-radius: 12px; overflow: hidden; }
+    .jc-p1 { border-color: #0D9488; }
+    .jc-p2 { border-color: #2563EB; }
+    .jc-p3 { border-color: #D97706; }
+    .jc-p4 { border-color: #7C3AED; }
+
+    .just-header { padding: 14px 22px; font-weight: 700; color: white; font-size: 1em; }
+    .jh-p1 { background: #0D9488; }
+    .jh-p2 { background: #2563EB; }
+    .jh-p3 { background: #D97706; }
+    .jh-p4 { background: #7C3AED; }
+
+    .just-body { padding: 20px 22px; }
+    .just-section { font-weight: 700; font-size: 0.85em; text-transform: uppercase; letter-spacing: 1px; margin: 14px 0 6px; }
+    .js-p1 { color: #0A6B62; }
+    .js-p2 { color: #1D4ED8; }
+    .js-p3 { color: #92400E; }
+    .js-p4 { color: #6D28D9; }
+    .just-text { font-size: 0.92em; color: #555; line-height: 1.65; }
+
+    .obj-goal { background: #f8f9fa; border-radius: 8px; padding: 14px 18px; margin-top: 16px; }
+    .og-label { font-size: 0.78em; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #999; margin-bottom: 5px; }
+    .og-text  { font-size: 0.92em; color: #333; font-style: italic; line-height: 1.55; }
+
+    .interdep {
+        border: 2px solid #1A2E4A; background: #F0F9FF;
+        border-radius: 10px; padding: 24px 28px; margin-top: 28px;
+        font-size: 1em; line-height: 1.8; color: #333;
+    }
+    .interdep strong { color: #1A2E4A; }
+
+    .obj-header {
+        display: flex; justify-content: space-between;
+        align-items: center; flex-wrap: wrap; gap: 12px;
+        margin-bottom: 16px; padding-bottom: 14px; border-bottom: 3px solid #eee;
+    }
+    .obj-header-title { font-size: 1.6em; font-weight: 700; }
+
+    @media (max-width: 768px) {
+        header h1 { font-size: 1.5em; }
+        .nav-btn { padding: 9px 16px; font-size: 0.85em; }
+        .chart-grid { grid-template-columns: 1fr; }
+        .just-grid  { grid-template-columns: 1fr; }
+        .indicator-grid { grid-template-columns: 1fr; }
+    }
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- ══ HEADER ══ -->
+<header>
+    <div class="header-top">
+        <div>
+            <h1>🚄 Dashboard Deutsche Bahn Vertrieb GmbH</h1>
+            <p class="header-sub">Evolución Digital · Cuatro Pivotes Estratégicos · Gobierno Corporativo</p>
+            <p class="header-meta">
+                <strong>Caso:</strong> Fortmann, Haffke &amp; Benlian (2019) —
+                <em>Navigating Through Digital Transformation Using Bimodal IT</em> &nbsp;|&nbsp;
+                <strong>Marco:</strong> Barahona &amp; Murillo-Esquivel · INCAE &nbsp;|&nbsp;
+                <strong>Período simulado:</strong> 1999–2018
+            </p>
+        </div>
+        <div class="header-badges">
+            <span class="hbadge p1">P1 Alineamiento Dinámico</span>
+            <span class="hbadge p2">P2 Cultura y Liderazgo</span>
+            <span class="hbadge p3">P3 Innovación Cliente</span>
+            <span class="hbadge p4">P4 Agilidad Operativa</span>
+        </div>
+    </div>
+</header>
+
+<!-- ══ NAV ══ -->
+<nav>
+    <button class="nav-btn active-overview" onclick="show('overview',this,'active-overview')">📊 Vista General</button>
+    <button class="nav-btn" onclick="show('p1',this,'active-p1')">🔗 P1 · Alineamiento Dinámico</button>
+    <button class="nav-btn" onclick="show('p2',this,'active-p2')">👥 P2 · Cultura y Liderazgo</button>
+    <button class="nav-btn" onclick="show('p3',this,'active-p3')">🎯 P3 · Innovación Cliente</button>
+    <button class="nav-btn" onclick="show('p4',this,'active-p4')">⚡ P4 · Agilidad Operativa</button>
+    <button class="nav-btn" onclick="show('just',this,'active-just')">💡 Justificación de Pivotes</button>
+</nav>
+
+
+<!-- ══════════════════════════════════════════
+     VISTA GENERAL
+══════════════════════════════════════════ -->
+<div id="overview" class="section active">
+    <div class="card">
+        <div class="card-title ct-gray">Resumen Ejecutivo · Cuatro Pivotes Estratégicos</div>
+
+        <div class="info-box">
+            <strong>Marco de Capacidades Dinámicas (Teece, 2007):</strong> Los cuatro pivotes operan bajo el esquema
+            <strong>Sensing → Seizing → Configuring</strong> para que DB Vertrieb detecte oportunidades y amenazas en el
+            mercado del transporte de pasajeros, capitalice la transición hacia canales digitales y reintegre su organización
+            de TI en una División Digital orientada a la experiencia omnicanal del cliente.
+        </div>
+
+        <div class="indicator-grid">
+            <div class="indicator-card ic-p1">
+                <div class="ic-label p1">Pivote 01 · Alineamiento Dinámico</div>
+                <p class="ic-desc">Integración de la estrategia digital con la estrategia corporativa del Grupo DB bajo una sola División Digital</p>
+                <div class="ic-value v-p1">1</div>
+                <p class="ic-sub">División Digital unificada con CDO en comité ejecutivo</p>
+            </div>
+            <div class="indicator-card ic-p2">
+                <div class="ic-label p2">Pivote 02 · Cultura y Liderazgo Digital</div>
+                <p class="ic-desc">Brecha de NPS interno entre TI Tradicional y TI Online — señal del deterioro cultural no atendido</p>
+                <div class="ic-value v-p2">56 pts</div>
+                <p class="ic-sub">NPS TI Trad: −22 vs. TI Online: +34 (2015)</p>
+            </div>
+            <div class="indicator-card ic-p3">
+                <div class="ic-label p3">Pivote 03 · Innovación Centrada en Cliente</div>
+                <p class="ic-desc">Satisfacción del pasajero en experiencia omnicanal — impacto directo de la reintegración TI</p>
+                <div class="ic-value v-p3">3.4/5</div>
+                <p class="ic-sub">CSAT omnicanal (2017) · Meta: ≥ 4.2/5</p>
+            </div>
+            <div class="indicator-card ic-p4">
+                <div class="ic-label p4">Pivote 04 · Agilidad Operativa</div>
+                <p class="ic-desc">Aceleración de time-to-market declarada por el CIO como meta de la reintegración de TI</p>
+                <div class="ic-value v-p4">5×</div>
+                <p class="ic-sub">Meta velocidad end-to-end (CIO, 2016)</p>
+            </div>
+        </div>
+
+        <div class="sub-title">Relación entre Pivotes y Capacidades Dinámicas</div>
+        <table>
+            <thead>
+                <tr class="th-gray">
+                    <th>Pivote</th>
+                    <th>Sensing · Detección</th>
+                    <th>Seizing · Aprovechamiento</th>
+                    <th>Configuring · Configuración</th>
+                    <th>Revisión Junta</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong style="color:#0D9488">P1 Alineamiento Dinámico</strong></td>
+                    <td>Detectar señales de mercado: plataformas de movilidad rivales que amenazan la interfaz con el cliente</td>
+                    <td>Lanzar estrategia digital corporativa con CDO en comité ejecutivo</td>
+                    <td>Integrar TI en la estrategia de digitalización del Grupo DB</td>
+                    <td><span class="cap-badge sensing">Mensual</span></td>
+                </tr>
+                <tr>
+                    <td><strong style="color:#2563EB">P2 Cultura y Liderazgo Digital</strong></td>
+                    <td>Medir NPS interno y brechas culturales entre funciones TI</td>
+                    <td>Capacitaciones obligatorias y campamentos interfuncionales</td>
+                    <td>Roles permanentes de liderazgo digital (CDO, Coordinador de Transformación)</td>
+                    <td><span class="cap-badge seizing">Trimestral</span></td>
+                </tr>
+                <tr>
+                    <td><strong style="color:#D97706">P3 Innovación Centrada en Cliente</strong></td>
+                    <td>Mapear fricciones del pasajero entre canales de venta</td>
+                    <td>Laboratorios de innovación y unidad de gestión omnicanal</td>
+                    <td>Customer journeys como eje de la División Digital</td>
+                    <td><span class="cap-badge configuring">Semestral</span></td>
+                </tr>
+                <tr>
+                    <td><strong style="color:#7C3AED">P4 Agilidad Operativa</strong></td>
+                    <td>Auditar velocidad de entrega y silos entre TI Online y Tradicional</td>
+                    <td>Implementar SAFe, Scrum y DevOps en TI reintegrada</td>
+                    <td>Reconfigurar presupuesto TI: de 90% mantenimiento a 50/50</td>
+                    <td><span class="cap-badge sensing">Mensual</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="chart-grid">
+        <div class="chart-container">
+            <div class="chart-title ct2-gray">📈 Progreso Global por Pivote (% avance hacia metas)</div>
+            <canvas id="overviewBar"></canvas>
+        </div>
+        <div class="chart-container">
+            <div class="chart-title ct2-gray">🎯 KPIs Críticos vs. Metas — Cuatro Pivotes</div>
+            <canvas id="overviewRadar"></canvas>
+        </div>
+    </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     PIVOTE 1 · ALINEAMIENTO DINÁMICO
+══════════════════════════════════════════ -->
+<div id="p1" class="section">
+    <div class="card">
+        <div class="obj-header">
+            <div class="obj-header-title" style="color:#0D9488">Pivote 1 · Alineamiento Dinámico</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <span class="cap-badge sensing">Sensing</span>
+                <span class="cap-badge seizing">Seizing</span>
+                <span class="cap-badge configuring">Configuring</span>
+            </div>
+        </div>
+
+        <div class="obj-desc p1">
+            <strong>¿Por qué este pivote?</strong> DB Vertrieb operaba con una estrategia de canales separados (TI Online vs. TI Tradicional) mientras competidores como plataformas de movilidad digital buscaban apropiarse de la interfaz con el cliente. La empresa necesitaba alinear dinámicamente su estrategia corporativa con la realidad del mercado digital, integrando la estrategia de TI en una sola estrategia de digitalización bajo el liderazgo del CDO en el comité ejecutivo.
+        </div>
+
+        <div class="sub-title p1">🔍 Sensing · Detección de Amenazas Competitivas</div>
+        <table>
+            <thead>
+                <tr class="th-p1">
+                    <th>Objetivo</th><th>Key Result (OKR)</th><th>KPI</th>
+                    <th>Valor Actual</th><th>Meta</th><th>Estado</th><th>Responsable</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Detectar amenazas de plataformas de movilidad que disputan la interfaz con el cliente</td>
+                    <td>Realizar 2 análisis competitivos anuales sobre plataformas de movilidad digital rivales</td>
+                    <td>Nº análisis competitivos completados/año</td>
+                    <td><strong>1</strong></td>
+                    <td>2/año</td>
+                    <td><span class="s-yellow">🟡 En progreso</span></td>
+                    <td>CDO + Estrategia</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="sub-title p1">⚡ Seizing · Posicionamiento Estratégico Digital</div>
+        <table>
+            <thead>
+                <tr class="th-p1">
+                    <th>Objetivo</th><th>Key Result (OKR)</th><th>KPI</th>
+                    <th>Valor Actual</th><th>Meta</th><th>Estado</th><th>Responsable</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Incorporar al CDO en el comité ejecutivo para elevar la prioridad de la digitalización</td>
+                    <td>Lograr que el 100% de las decisiones de inversión TI pasen por la División Digital en 12 meses</td>
+                    <td>% decisiones de inversión TI canalizadas por la División Digital</td>
+                    <td><strong>40%</strong></td>
+                    <td>100%</td>
+                    <td><span class="s-yellow">🟡 En progreso</span></td>
+                    <td>CDO + CFO</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="sub-title p1">⚙️ Configuring · Integración Estrategia TI – Estrategia Corporativa</div>
+        <table>
+            <thead>
+                <tr class="th-p1">
+                    <th>Objetivo</th><th>Key Result (OKR)</th><th>KPI</th>
+                    <th>Valor Actual</th><th>Meta</th><th>Estado</th><th>Responsable</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Integrar la estrategia de TI en la estrategia de digitalización corporativa del Grupo DB</td>
+                    <td>Publicar una estrategia digital corporativa unificada que incluya hoja de ruta TI en 6 meses</td>
+                    <td>Existencia y fecha de publicación de la estrategia digital unificada</td>
+                    <td><strong>No publicada</strong></td>
+                    <td>Publicada en 6 meses</td>
+                    <td><span class="s-red">🔴 Requiere atención</span></td>
+                    <td>CDO + CIO + CEO</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="sub-title">⚙️ Acciones Clave de la Junta Directiva</div>
+        <div class="action-box p1">
+            <span class="action-num an-p1">Acción 1:</span>
+            <strong> Revisar mensualmente el mapa competitivo de plataformas de movilidad</strong> para detectar cuándo un competidor captura la interfaz digital con el pasajero, ordenando respuestas estratégicas inmediatas antes de que la ventana de oportunidad se cierre.
+        </div>
+        <div class="action-box p1">
+            <span class="action-num an-p1">Acción 2:</span>
+            <strong> Formalizar la incorporación del CDO al comité ejecutivo</strong> con presupuesto propio y autoridad para priorizar inversiones digitales, asegurando que la agenda TI deje de ser un tema subordinado a las decisiones financieras o comerciales de corto plazo.
+        </div>
+        <div class="action-box p1">
+            <span class="action-num an-p1">Acción 3:</span>
+            <strong> Aprobar y publicar la estrategia digital corporativa unificada</strong> que integre la hoja de ruta TI —incluyendo modernización de mainframes— como parte inseparable de la estrategia del Grupo DB, con OKRs revisables cada seis meses.
+        </div>
+    </div>
+
+    <div class="chart-grid">
+        <div class="chart-container">
+            <div class="chart-title ct2-p1">📊 Canales de Venta: Participación Digital vs. Tradicional (%)</div>
+            <canvas id="p1CanalChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <div class="chart-title ct2-p1">🏆 Avance de Alineamiento Estratégico Digital (% implementación)</div>
+            <canvas id="p1AvanceChart"></canvas>
+        </div>
+    </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     PIVOTE 2 · CULTURA Y LIDERAZGO DIGITAL
+══════════════════════════════════════════ -->
+<div id="p2" class="section">
+    <div class="card">
+        <div class="obj-header">
+            <div class="obj-header-title" style="color:#2563EB">Pivote 2 · Cultura y Liderazgo Digital</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <span class="cap-badge sensing">Sensing</span>
+                <span class="cap-badge seizing">Seizing</span>
+                <span class="cap-badge configuring">Configuring</span>
+            </div>
+        </div>
+
+        <div class="obj-desc p2">
+            <strong>¿Por qué este pivote?</strong> La brecha cultural entre TI Online (mentalidad startup, NPS +34) y TI Tradicional (orientada a costos, NPS −22) fue el principal obstáculo de la transformación. Sin una cultura digital deliberadamente construida, ni SAFe ni DevOps pueden sostenerse. DB Vertrieb lo comprobó: la reintegración técnica fue más rápida que la reintegración cultural, que tomó más del doble del tiempo estimado.
+        </div>
+
+        <div class="sub-title p2">🔍 Sensing · Diagnóstico de la Brecha Cultural</div>
+        <table>
+            <thead>
+                <tr class="th-p2">
+                    <th>Objetivo</th><th>Key Result (OKR)</th><th>KPI</th>
+                    <th>Valor Actual</th><th>Meta</th><th>Estado</th><th>Responsable</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Medir y monitorear la brecha de cultura digital entre funciones TI antes de que sea irreversible</td>
+                    <td>Reducir la brecha de NPS interno entre funciones TI a menos de 20 puntos en 12 meses</td>
+                    <td>Brecha NPS interno TI Tradicional vs. TI Online</td>
+                    <td><strong>56 pts (−22 vs. +34)</strong></td>
+                    <td>&lt; 20 pts</td>
+                    <td><span class="s-red">🔴 Crítico</span></td>
+                    <td>RRHH + CIO</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="sub-title p2">⚡ Seizing · Formación Obligatoria y Cohesión de Equipos</div>
+        <table>
+            <thead>
+                <tr class="th-p2">
+                    <th>Objetivo</th><th>Key Result (OKR)</th><th>KPI</th>
+                    <th>Valor Actual</th><th>Meta</th><th>Estado</th><th>Responsable</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Escalar la mentalidad ágil a toda la función TI reintegrada mediante formación obligatoria</td>
+                    <td>Certificar al 100% de empleados TI en metodologías ágiles y completar ≥ 4 campamentos interfuncionales/año</td>
+                    <td>% empleados TI formados en métodos ágiles / Nº campamentos interfuncionales/año</td>
+                    <td><strong>42% / 1 campamento</strong></td>
+                    <td>100% / ≥ 4/año</td>
+                    <td><span class="s-yellow">🟡 En progreso</span></td>
+                    <td>RRHH + Coordinador Transformación</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="sub-title p2">⚙️ Configuring · Institucionalización del Liderazgo Digital</div>
+        <table>
+            <thead>
+                <tr class="th-p2">
+                    <th>Objetivo</th><th>Key Result (OKR)</th><th>KPI</th>
+                    <th>Valor Actual</th><th>Meta</th><th>Estado</th><th>Responsable</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Consolidar roles permanentes de liderazgo digital que sostengan la cultura ágil más allá de las personas</td>
+                    <td>Cubrir el 100% de los nuevos roles de la División Digital (Coordinador de Transformación, propietarios de producto, gestores omnicanal) en 18 meses</td>
+                    <td>% nuevos roles digitales cubiertos internamente</td>
+                    <td><strong>55%</strong></td>
+                    <td>100%</td>
+                    <td><span class="s-yellow">🟡 En progreso</span></td>
+                    <td>CDO + RRHH</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="sub-title">⚙️ Acciones Clave de la Junta Directiva</div>
+        <div class="action-box p2">
+            <span class="action-num an-p2">Acción 1:</span>
+            <strong> Evaluar trimestralmente el NPS interno de la función TI reintegrada</strong> exigiendo planes de acción concretos si la brecha entre grupos supera los 20 puntos, antes de que la fractura cultural bloquee la colaboración omnicanal.
+        </div>
+        <div class="action-box p2">
+            <span class="action-num an-p2">Acción 2:</span>
+            <strong> Aprobar y financiar las capacitaciones obligatorias</strong> en SAFe, Scrum y análisis de negocio para todos los empleados TI, comprendiendo que la compulsoriedad —no la voluntariedad— fue el factor que generó cohesión de equipo en DB Vertrieb.
+        </div>
+        <div class="action-box p2">
+            <span class="action-num an-p2">Acción 3:</span>
+            <strong> Institucionalizar el rol del Coordinador de Transformación</strong> como función permanente con presupuesto propio, KPIs de avance del backlog de transformación y reporte directo a la Junta de Gobierno de Transformación creada en 2016.
+        </div>
+    </div>
+
+    <div class="chart-grid">
+        <div class="chart-container">
+            <div class="chart-title ct2-p2">📉 Evolución NPS Interno — TI Tradicional vs. Online vs. Reintegrada</div>
+            <canvas id="p2NpsChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <div class="chart-title ct2-p2">🧑‍💻 Cobertura de Formación Ágil por Área (%)</div>
+            <canvas id="p2FormChart"></canvas>
+        </div>
+    </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     PIVOTE 3 · INNOVACIÓN CENTRADA EN CLIENTE
+══════════════════════════════════════════ -->
+<div id="p3" class="section">
+    <div class="card">
+        <div class="obj-header">
+            <div class="obj-header-title" style="color:#D97706">Pivote 3 · Innovación Centrada en Cliente</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <span class="cap-badge sensing">Sensing</span>
+                <span class="cap-badge seizing">Seizing</span>
+                <span class="cap-badge configuring">Configuring</span>
+            </div>
+        </div>
+
+        <div class="obj-desc p3">
+            <strong>¿Por qué este pivote?</strong> El pasajero de DB Vertrieb espera que las interfaces entre canales (app, web, máquina de boletos, centro de viajes) sean casi invisibles. La fragmentación de TI en dos unidades separadas hacía imposible esta experiencia. Innovar centrado en el cliente significó reorganizar toda la División Digital en torno a los <em>customer journeys</em> del pasajero, no en torno a los silos de canal.
+        </div>
+
+        <div class="sub-title p3">🔍 Sensing · Mapeo de Fricciones del Pasajero</div>
+        <table>
+            <thead>
+                <tr class="th-p3">
+                    <th>Objetivo</th><th>Key Result (OKR)</th><th>KPI</th>
+                    <th>Valor Actual</th><th>Meta</th><th>Estado</th><th>Responsable</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Identificar y documentar las fricciones del pasajero al cruzar entre canales de venta</td>
+                    <td>Documentar ≥ 6 fricciones críticas de experiencia omnicanal por trimestre con evidencia de usuario</td>
+                    <td>Nº fricciones omnicanal documentadas con evidencia de usuario/trimestre</td>
+                    <td><strong>2</strong></td>
+                    <td>≥ 6/trimestre</td>
+                    <td><span class="s-red">🔴 Requiere atención</span></td>
+                    <td>Gestión Omnicanal + UX</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="sub-title p3">⚡ Seizing · Laboratorios de Innovación y Cocreación</div>
+        <table>
+            <thead>
+                <tr class="th-p3">
+                    <th>Objetivo</th><th>Key Result (OKR)</th><th>KPI</th>
+                    <th>Valor Actual</th><th>Meta</th><th>Estado</th><th>Responsable</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Aprovechar los laboratorios de innovación para lanzar mejoras en la experiencia del pasajero</td>
+                    <td>Lanzar ≥ 3 nuevas funcionalidades omnicanal validadas con usuarios reales por año</td>
+                    <td>Nº funcionalidades omnicanal lanzadas con validación de usuario/año</td>
+                    <td><strong>1</strong></td>
+                    <td>≥ 3/año</td>
+                    <td><span class="s-yellow">🟡 En progreso</span></td>
+                    <td>Lab. Innovación + Producto</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="sub-title p3">⚙️ Configuring · Customer Journeys como Eje Organizacional</div>
+        <table>
+            <thead>
+                <tr class="th-p3">
+                    <th>Objetivo</th><th>Key Result (OKR)</th><th>KPI</th>
+                    <th>Valor Actual</th><th>Meta</th><th>Estado</th><th>Responsable</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Reorganizar la División Digital en torno a los customer journeys del pasajero para eliminar silos de canal</td>
+                    <td>Alcanzar CSAT de experiencia omnicanal ≥ 4.2/5 en 24 meses</td>
+                    <td>CSAT experiencia omnicanal del pasajero (escala 1–5)</td>
+                    <td><strong>3.4/5</strong></td>
+                    <td>≥ 4.2/5</td>
+                    <td><span class="s-yellow">🟡 En construcción</span></td>
+                    <td>CDO + Gestión Omnicanal</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="sub-title">⚙️ Acciones Clave de la Junta Directiva</div>
+        <div class="action-box p3">
+            <span class="action-num an-p3">Acción 1:</span>
+            <strong> Revisar semestralmente el CSAT omnicanal</strong> y exigir que las unidades de canal presenten el mapa de fricciones del pasajero actualizado, con evidencia de las mejoras implementadas en cada ciclo.
+        </div>
+        <div class="action-box p3">
+            <span class="action-num an-p3">Acción 2:</span>
+            <strong> Garantizar presupuesto y autonomía operativa a los laboratorios de innovación</strong> para que puedan prototip­ar y validar con pasajeros reales antes de escalar, evitando que los laboratorios se conviertan en unidades de reporte sin impacto en el producto.
+        </div>
+        <div class="action-box p3">
+            <span class="action-num an-p3">Acción 3:</span>
+            <strong> Formalizar la estructura de customer journeys</strong> como el principio organizador de la División Digital, vinculando los OKRs de cada unidad al impacto en la experiencia del pasajero y no solo a métricas internas de TI.
+        </div>
+    </div>
+
+    <div class="chart-grid">
+        <div class="chart-container">
+            <div class="chart-title ct2-p3">😊 CSAT Experiencia Omnicanal — Evolución (escala 1–5)</div>
+            <canvas id="p3CsatChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <div class="chart-title ct2-p3">🚦 Releases Omnicanal por Año — Avance hacia Meta</div>
+            <canvas id="p3ReleasesChart"></canvas>
+        </div>
+    </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     PIVOTE 4 · AGILIDAD OPERATIVA
+══════════════════════════════════════════ -->
+<div id="p4" class="section">
+    <div class="card">
+        <div class="obj-header">
+            <div class="obj-header-title" style="color:#7C3AED">Pivote 4 · Agilidad Operativa</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <span class="cap-badge sensing">Sensing</span>
+                <span class="cap-badge seizing">Seizing</span>
+                <span class="cap-badge configuring">Configuring</span>
+            </div>
+        </div>
+
+        <div class="obj-desc p4">
+            <strong>¿Por qué este pivote?</strong> DB Vertrieb operó 15 años con una TI Tradicional de 2–4 releases/año y una TI Online de 8–10 releases/año. Esta bimodalidad generó silos culturales y bloqueó la estrategia omnicanal. La reintegración en 2016 buscaba escalar la agilidad a toda la organización: el CIO estableció como meta ser <em>"cinco veces más rápido de extremo a extremo."</em> SAFe, Scrum y DevOps fueron los mecanismos de escalamiento elegidos.
+        </div>
+
+        <div class="sub-title p4">🔍 Sensing · Diagnóstico de Ineficiencias del Modelo Bimodal</div>
+        <table>
+            <thead>
+                <tr class="th-p4">
+                    <th>Objetivo</th><th>Key Result (OKR)</th><th>KPI</th>
+                    <th>Valor Actual</th><th>Meta</th><th>Estado</th><th>Responsable</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Cuantificar las ineficiencias de la TI bimodal separada antes de definir el modelo de reintegración</td>
+                    <td>Completar auditoría de velocidad de entrega, NPS y conflictos de priorización de ambas funciones TI en ≤ 60 días</td>
+                    <td>Días hasta completar la auditoría conjunta TI Trad. + TI Online</td>
+                    <td><strong>Sin línea base</strong></td>
+                    <td>≤ 60 días</td>
+                    <td><span class="s-red">🔴 Requiere atención</span></td>
+                    <td>CIO + CDO</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="sub-title p4">⚡ Seizing · Implementación de SAFe, Scrum y DevOps</div>
+        <table>
+            <thead>
+                <tr class="th-p4">
+                    <th>Objetivo</th><th>Key Result (OKR)</th><th>KPI</th>
+                    <th>Valor Actual</th><th>Meta</th><th>Estado</th><th>Responsable</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Escalar metodologías ágiles a toda la función TI reintegrada para multiplicar 5× la velocidad de entrega</td>
+                    <td>Reducir el time-to-market de nuevas funcionalidades de 180 a ≤ 36 días en 24 meses</td>
+                    <td>Días promedio de time-to-market para funcionalidades nuevas</td>
+                    <td><strong>180 días</strong></td>
+                    <td>≤ 36 días</td>
+                    <td><span class="s-red">🔴 En desarrollo</span></td>
+                    <td>CIO + DevOps Lead</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="sub-title p4">⚙️ Configuring · Reconfiguración Presupuestal y Modernización TI</div>
+        <table>
+            <thead>
+                <tr class="th-p4">
+                    <th>Objetivo</th><th>Key Result (OKR)</th><th>KPI</th>
+                    <th>Valor Actual</th><th>Meta</th><th>Estado</th><th>Responsable</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Reconfigurar el presupuesto de TI para sostener la agilidad operativa a largo plazo</td>
+                    <td>Incrementar el presupuesto de nuevo desarrollo digital del 15% al 50% del total TI en 3 años</td>
+                    <td>% presupuesto TI destinado a nuevo desarrollo digital (vs. mantenimiento heredado)</td>
+                    <td><strong>28%</strong></td>
+                    <td>50%</td>
+                    <td><span class="s-yellow">🟡 En transición</span></td>
+                    <td>CFO + CIO</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="sub-title">⚙️ Acciones Clave de la Junta Directiva</div>
+        <div class="action-box p4">
+            <span class="action-num an-p4">Acción 1:</span>
+            <strong> Encargar una auditoría conjunta al CIO y al CDO</strong> que cuantifique brechas de velocidad, NPS interno y conflictos de priorización entre funciones TI, con entrega directa a la Junta en ≤ 60 días y sin filtros intermedios que suavicen los hallazgos.
+        </div>
+        <div class="action-box p4">
+            <span class="action-num an-p4">Acción 2:</span>
+            <strong> Aprobar el programa de transformación ágil obligatorio</strong> (SAFe, Scrum, DevOps) con capacitaciones compulsorias para todos los empleados TI y autorizar la contratación del Coordinador de Transformación dedicado exclusivamente a proteger el backlog de cambio frente a la presión operativa diaria.
+        </div>
+        <div class="action-box p4">
+            <span class="action-num an-p4">Acción 3:</span>
+            <strong> Aprobar el plan plurianual de reconfiguración presupuestal</strong> que lleve el nuevo desarrollo digital del 28% actual al 50% en tres años, vinculando la modernización de sistemas host/mainframe a la estrategia de digitalización corporativa y revisando el avance trimestralmente con el CFO.
+        </div>
+    </div>
+
+    <div class="chart-grid">
+        <div class="chart-container">
+            <div class="chart-title ct2-p4">⚡ Evolución Time-to-Market (días) — Meta CIO: 5× más rápido</div>
+            <canvas id="p4TTMChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <div class="chart-title ct2-p4">💰 Presupuesto TI: Mantenimiento Heredado vs. Nuevo Desarrollo (%)</div>
+            <canvas id="p4BudgetChart"></canvas>
+        </div>
+    </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     JUSTIFICACIÓN
+══════════════════════════════════════════ -->
+<div id="just" class="section">
+    <div class="card">
+        <div class="card-title ct-gray">¿Por qué estos cuatro pivotes? · Fundamento y Vínculo con el Caso</div>
+
+        <div class="info-box">
+            La selección de los cuatro pivotes responde al análisis de las brechas estratégicas de DB Vertrieb descritas en Fortmann, Haffke &amp; Benlian (2019) y a su correspondencia con el marco de gobierno de transformación digital de Barahona &amp; Murillo-Esquivel (INCAE). Cada pivote aborda una dimensión distinta e interdependiente de la evolución digital de la empresa.
+        </div>
+
+        <div class="just-grid">
+            <div class="just-card jc-p1">
+                <div class="just-header jh-p1">Pivote 1 · Alineamiento Dinámico</div>
+                <div class="just-body">
+                    <div class="just-section js-p1">¿Por qué?</div>
+                    <p class="just-text">La estrategia TI y la estrategia corporativa de DB Vertrieb estaban desconectadas durante 15 años: la TI Tradicional respondía al CIO, la TI Online a la división de canales digitales. Sin alineamiento dinámico, cada unidad optimizaba su propio silo en lugar de servir al objetivo común de la experiencia omnicanal.</p>
+                    <div class="just-section js-p1">Vínculo con el caso</div>
+                    <p class="just-text">La creación de la División Digital con el CDO en el comité ejecutivo fue el mecanismo que alineó la estrategia TI con la estrategia del Grupo DB. El CIO señaló: <em>"El nuevo enfoque me ayuda absolutamente a impulsar los temas del CIO porque todos reconocen que la TI es la base de nuestro negocio futuro."</em></p>
+                    <div class="obj-goal">
+                        <div class="og-label">Objetivo Estratégico</div>
+                        <p class="og-text">Convertir la estrategia TI en parte inseparable de la estrategia de digitalización corporativa del Grupo DB.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="just-card jc-p2">
+                <div class="just-header jh-p2">Pivote 2 · Cultura y Liderazgo Digital</div>
+                <div class="just-body">
+                    <div class="just-section js-p2">¿Por qué?</div>
+                    <p class="just-text">La reintegración técnica de las dos funciones TI fue más rápida que la reintegración cultural. Los empleados de TI Tradicional se sentían "atrapados con sistemas agotados" mientras los de TI Online perdían la autonomía a la que estaban acostumbrados con SAFe. Sin liderazgo cultural deliberado, la transformación técnica no produce cambio organizacional real.</p>
+                    <div class="just-section js-p2">Vínculo con el caso</div>
+                    <p class="just-text">Las capacitaciones obligatorias fueron el punto de inflexión: el Jefe de Procesos de Ventas reportó que los empleados <em>"incluso comenzaron a organizar excursiones por sí mismos"</em> —señal de cohesión cultural genuina, no solo cumplimiento formal de un programa de formación.</p>
+                    <div class="obj-goal">
+                        <div class="og-label">Objetivo Estratégico</div>
+                        <p class="og-text">Institucionalizar la cultura ágil como el ADN de toda la función TI reintegrada, más allá de las personas que lideran la transformación.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="just-card jc-p3">
+                <div class="just-header jh-p3">Pivote 3 · Innovación Centrada en Cliente</div>
+                <div class="just-body">
+                    <div class="just-section js-p3">¿Por qué?</div>
+                    <p class="just-text">El pasajero moderno no distingue entre canales: espera comprar en la app, cambiar su boleto en la web y recogerlo en máquina sin fricciones. La organización bimodal de DB Vertrieb producía exactamente lo opuesto: estrategias distintas por canal y datos fragmentados que impedían personalizar la experiencia de viaje.</p>
+                    <div class="just-section js-p3">Vínculo con el caso</div>
+                    <p class="just-text">El CDO articuló el principio central: <em>"Solo puede haber omnicanalidad si juntamos las funciones."</em> Los laboratorios de innovación y la unidad de gestión omnicanal fueron los mecanismos para trasladar la voz del pasajero al centro de cada decisión de producto y arquitectura TI.</p>
+                    <div class="obj-goal">
+                        <div class="og-label">Objetivo Estratégico</div>
+                        <p class="og-text">Reorganizar la División Digital alrededor de los customer journeys del pasajero para ofrecer una experiencia de compra y viaje sin fricciones en todos los canales.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="just-card jc-p4">
+                <div class="just-header jh-p4">Pivote 4 · Agilidad Operativa</div>
+                <div class="just-body">
+                    <div class="just-section js-p4">¿Por qué?</div>
+                    <p class="just-text">Sin velocidad de entrega, los otros tres pivotes son intenciones sin impacto. La TI Tradicional operaba con 2 releases/año mientras el mercado digital demandaba correcciones semanales. La Agilidad Operativa es el pivote habilitador: sin ella, el alineamiento estratégico no puede ejecutarse, la cultura digital no tiene ritmo y la innovación centrada en el cliente no puede iterar.</p>
+                    <div class="just-section js-p4">Vínculo con el caso</div>
+                    <p class="just-text">El CIO definió la aspiración con precisión: <em>"Queremos ser cinco veces más rápidos de extremo a extremo."</em> SAFe, Scrum y DevOps fueron los instrumentos, pero la condición fue la reintegración en una sola función TI —porque la omnicanalidad exige una arquitectura y un ritmo de delivery unificados.</p>
+                    <div class="obj-goal">
+                        <div class="og-label">Objetivo Estratégico</div>
+                        <p class="og-text">Multiplicar 5× la velocidad de entrega de valor al negocio reintegrando las funciones TI y escalando SAFe, Scrum y DevOps a toda la organización digital.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="interdep">
+            <strong>Los cuatro pivotes son interdependientes e inseparables:</strong> Sin
+            <strong>Alineamiento Dinámico</strong>, la TI no responde al mercado; sin
+            <strong>Cultura y Liderazgo Digital</strong>, SAFe fracasa por resistencia organizacional; sin
+            <strong>Innovación Centrada en Cliente</strong>, la velocidad ágil sirve al canal equivocado; sin
+            <strong>Agilidad Operativa</strong>, los otros tres no tienen el ritmo de ejecución necesario para competir
+            con plataformas de movilidad digital. La Junta Directiva debe <strong>orquestar los cuatro simultáneamente</strong>
+            para garantizar la coherencia estratégica de la evolución digital de DB Vertrieb.
+        </div>
+    </div>
+
+    <div class="chart-container">
+        <div class="chart-title ct2-gray">🕸️ Mapa de Interdependencia · Cuatro Pivotes vs. Capacidades Dinámicas</div>
+        <canvas id="justRadar" style="max-height:400px;"></canvas>
+    </div>
+</div>
+
+</div><!-- /container -->
+
+
+<!-- ══════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════ -->
+<script>
+function show(id, btn, cls) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.querySelectorAll('.nav-btn').forEach(b => { b.className = 'nav-btn'; });
+    btn.classList.add(cls);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── OVERVIEW ────────────────────────────────────────────
+new Chart(document.getElementById('overviewBar').getContext('2d'), {
+    type: 'bar',
+    data: {
+        labels: ['P1 Alineamiento Dinámico', 'P2 Cultura y Liderazgo', 'P3 Innovación Cliente', 'P4 Agilidad Operativa'],
+        datasets: [{
+            label: 'Progreso actual (%)',
+            data: [52, 58, 45, 38],
+            backgroundColor: ['rgba(13,148,136,0.75)','rgba(37,99,235,0.75)','rgba(217,119,6,0.75)','rgba(124,58,237,0.75)'],
+            borderColor: ['#0D9488','#2563EB','#D97706','#7C3AED'],
+            borderWidth: 1.5, borderRadius: 6
+        },{
+            label: 'Meta (%)',
+            data: [100,100,100,100],
+            backgroundColor: 'transparent',
+            borderColor: '#6B7280', borderWidth: 1.5, type: 'line', pointRadius: 0, borderDash:[6,3]
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { position: 'bottom' } },
+        scales: { y: { beginAtZero:true, max:100, title:{ display:true, text:'% avance' } } }
+    }
+});
+
+new Chart(document.getElementById('overviewRadar').getContext('2d'), {
+    type: 'radar',
+    data: {
+        labels: ['Alineamiento\nDinámico','Cultura y\nLiderazgo','Innovación\nCliente','Agilidad\nOperativa','Velocidad\nEntrega','NPS\nInterno'],
+        datasets: [{
+            label: 'Estado actual (2018)',
+            data: [52, 58, 45, 38, 44, 55],
+            backgroundColor: 'rgba(30,58,95,0.15)', borderColor: '#1A2E4A',
+            pointBackgroundColor: '#1A2E4A', borderWidth: 2, pointRadius: 4
+        },{
+            label: 'Meta estratégica',
+            data: [100,100,100,100,100,100],
+            backgroundColor: 'rgba(5,150,105,0.04)', borderColor: '#059669',
+            borderDash:[6,3], pointRadius: 3, borderWidth: 1.5
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: { r:{ beginAtZero:true, max:100, ticks:{ stepSize:25 } } },
+        plugins: { legend: { position: 'bottom' } }
+    }
+});
+
+// ── P1 ────────────────────────────────────────────────
+new Chart(document.getElementById('p1CanalChart').getContext('2d'), {
+    type: 'line',
+    data: {
+        labels: ['2000','2003','2006','2009','2012','2015','2016','2017','2018'],
+        datasets: [{
+            label: 'Canal digital (% ventas totales)',
+            data: [3, 6, 10, 16, 24, 35, 40, 46, 52],
+            borderColor: '#0D9488', backgroundColor: 'rgba(13,148,136,0.1)',
+            fill: true, tension: 0.4, borderWidth: 2.5, pointRadius: 4, pointBackgroundColor: '#0D9488'
+        },{
+            label: 'Canal tradicional (% ventas totales)',
+            data: [97, 94, 90, 84, 76, 65, 60, 54, 48],
+            borderColor: '#DC2626', backgroundColor: 'rgba(220,38,38,0.07)',
+            fill: true, tension: 0.4, borderWidth: 2.5, pointRadius: 4, pointBackgroundColor: '#DC2626'
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { position: 'bottom' } },
+        scales: { y: { title:{ display:true, text:'% ventas totales' }, max:100 } }
+    }
+});
+
+new Chart(document.getElementById('p1AvanceChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+        labels: ['CDO en comité ejecutivo','Estrategia digital unificada','TI en roadmap corporativo','Presupuesto digital aprobado','Revisión mensual de mercado'],
+        datasets: [{
+            label: '% implementado',
+            data: [100, 30, 55, 45, 60],
+            backgroundColor: ['rgba(13,148,136,0.8)','rgba(220,38,38,0.7)','rgba(217,119,6,0.7)','rgba(217,119,6,0.7)','rgba(13,148,136,0.6)'],
+            borderWidth: 1.5, borderRadius: 5
+        }]
+    },
+    options: {
+        responsive: true, indexAxis: 'y',
+        plugins: { legend:{ display:false } },
+        scales: { x:{ beginAtZero:true, max:100, title:{ display:true, text:'% implementación' } } }
+    }
+});
+
+// ── P2 ────────────────────────────────────────────────
+new Chart(document.getElementById('p2NpsChart').getContext('2d'), {
+    type: 'line',
+    data: {
+        labels: ['2013','2014','2015','2016\n(Fusión)','2017','2018'],
+        datasets: [{
+            label: 'NPS TI Tradicional',
+            data: [-10,-15,-22,-5,8,20],
+            borderColor: '#DC2626', fill: false, tension: 0.4,
+            borderWidth: 2.5, pointRadius: 5, pointBackgroundColor: '#DC2626'
+        },{
+            label: 'NPS TI Online',
+            data: [38,36,34,null,null,null],
+            borderColor: '#2563EB', fill: false, tension: 0.4,
+            borderWidth: 2.5, pointRadius: 5, pointBackgroundColor: '#2563EB'
+        },{
+            label: 'NPS TI Reintegrada',
+            data: [null,null,null,2,12,28],
+            borderColor: '#7C3AED', backgroundColor: 'rgba(124,58,237,0.08)',
+            fill: true, tension: 0.4, borderWidth: 2.5, pointRadius: 5, pointBackgroundColor: '#7C3AED'
+        },{
+            label: 'Meta: +50',
+            data: Array(6).fill(50),
+            borderColor: '#059669', borderDash:[8,4], pointRadius: 0, borderWidth: 1.5
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { position: 'bottom' } },
+        scales: { y: { title:{ display:true, text:'NPS Interno' } } }
+    }
+});
+
+new Chart(document.getElementById('p2FormChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+        labels: ['TI Reintegrada','Gestión Omnicanal','Canales Digitales','Canales Trad.','Lab. Innovación','Negocio / Ventas'],
+        datasets: [{
+            label: 'Cobertura actual (%)',
+            data: [60, 55, 82, 35, 78, 30],
+            backgroundColor: ['rgba(124,58,237,0.75)','rgba(217,119,6,0.75)','rgba(37,99,235,0.75)',
+                              'rgba(220,38,38,0.65)','rgba(13,148,136,0.8)','rgba(107,114,128,0.65)'],
+            borderWidth: 1.5, borderRadius: 5
+        },{
+            label: 'Meta (%)',
+            data: Array(6).fill(90),
+            backgroundColor: 'transparent',
+            borderColor: '#6B7280', borderWidth: 1.5, type: 'line', pointRadius: 0, borderDash:[6,3]
+        }]
+    },
+    options: {
+        responsive: true, indexAxis: 'y',
+        plugins: { legend: { position: 'bottom' } },
+        scales: { x:{ beginAtZero:true, max:100, title:{ display:true, text:'Cobertura (%)' } } }
+    }
+});
+
+// ── P3 ────────────────────────────────────────────────
+new Chart(document.getElementById('p3CsatChart').getContext('2d'), {
+    type: 'line',
+    data: {
+        labels: ['Ene 16','Mar 16','Jun 16','Sep 16','Dic 16','Mar 17','Jun 17','Sep 17','Dic 17','Mar 18'],
+        datasets: [{
+            label: 'CSAT omnicanal (1–5)',
+            data: [2.8,2.9,3.0,3.1,3.2,3.3,3.4,3.5,3.7,3.9],
+            borderColor: '#D97706', backgroundColor: 'rgba(217,119,6,0.1)',
+            fill: true, tension: 0.4, borderWidth: 2.5, pointRadius: 4, pointBackgroundColor: '#D97706'
+        },{
+            label: 'Meta ≥ 4.2',
+            data: Array(10).fill(4.2),
+            borderColor: '#059669', borderDash:[8,4], pointRadius: 0, borderWidth: 1.5
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { position: 'bottom' } },
+        scales: { y:{ min:1, max:5, title:{ display:true, text:'CSAT (1–5)' } } }
+    }
+});
+
+new Chart(document.getElementById('p3ReleasesChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+        labels: ['TI Trad.\n(2015)','TI Online\n(2015)','Reintegrada\n(2016)','Reintegrada\n(2017)','Reintegrada\n(2018)','Meta CIO'],
+        datasets: [{
+            label: 'Releases/año',
+            data: [2, 9, 4, 6, 8, 10],
+            backgroundColor: ['rgba(220,38,38,0.75)','rgba(37,99,235,0.75)',
+                              'rgba(124,58,237,0.5)','rgba(124,58,237,0.65)','rgba(124,58,237,0.8)','rgba(5,150,105,0.75)'],
+            borderColor: ['#DC2626','#2563EB','#7C3AED','#7C3AED','#7C3AED','#059669'],
+            borderWidth: 1.5, borderRadius: 6
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend:{ display:false } },
+        scales: { y:{ beginAtZero:true, title:{ display:true, text:'Releases/año' } } }
+    }
+});
+
+// ── P4 ────────────────────────────────────────────────
+new Chart(document.getElementById('p4TTMChart').getContext('2d'), {
+    type: 'line',
+    data: {
+        labels: ['Ene 16','Mar 16','Jun 16','Sep 16','Dic 16','Mar 17','Jun 17','Sep 17','Dic 17','Mar 18'],
+        datasets: [{
+            label: 'Time-to-Market real (días)',
+            data: [180,172,158,140,120,102,88,72,60,52],
+            borderColor: '#7C3AED', backgroundColor: 'rgba(124,58,237,0.1)',
+            fill: true, tension: 0.4, borderWidth: 2.5, pointRadius: 4, pointBackgroundColor: '#7C3AED'
+        },{
+            label: 'Meta CIO: 36 días',
+            data: Array(10).fill(36),
+            borderColor: '#059669', borderDash:[8,4], pointRadius: 0, borderWidth: 1.5
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { position: 'bottom' } },
+        scales: { y:{ title:{ display:true, text:'Días promedio TTM' } } }
+    }
+});
+
+new Chart(document.getElementById('p4BudgetChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+        labels: ['Baseline\n(1999)','Pre-Fusión\n(2015)','Año 1\n(2016)','Año 2\n(2017)','Meta\n(2018+)'],
+        datasets: [{
+            label: '% Mantenimiento heredado',
+            data: [90,82,72,62,50],
+            backgroundColor: 'rgba(220,38,38,0.72)', borderColor: '#DC2626', borderWidth: 1.5, borderRadius: 4
+        },{
+            label: '% Nuevo desarrollo digital',
+            data: [10,18,28,38,50],
+            backgroundColor: 'rgba(124,58,237,0.72)', borderColor: '#7C3AED', borderWidth: 1.5, borderRadius: 4
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { position: 'bottom' } },
+        scales: {
+            x:{ stacked:true },
+            y:{ stacked:true, max:100, title:{ display:true, text:'% Presupuesto TI' } }
+        }
+    }
+});
+
+// ── JUSTIFICACIÓN RADAR ────────────────────────────────
+new Chart(document.getElementById('justRadar').getContext('2d'), {
+    type: 'radar',
+    data: {
+        labels: [
+            'Sensing P1\n(Mercado)','Seizing P1\n(CDO Ejecutivo)','Configuring P1\n(Estrategia)',
+            'Sensing P2\n(NPS Cultural)','Seizing P2\n(Formación)','Configuring P2\n(Roles digitales)',
+            'Sensing P3\n(Fricciones)','Seizing P3\n(Innovación)','Configuring P3\n(Journeys)',
+            'Sensing P4\n(Auditoría)','Seizing P4\n(SAFe/DevOps)','Configuring P4\n(Presupuesto)'
+        ],
+        datasets: [{
+            label: 'Progreso actual (2018)',
+            data: [60,100,55,45,58,55,40,50,45,35,42,55],
+            backgroundColor: 'rgba(30,58,95,0.15)', borderColor: '#1A2E4A',
+            pointBackgroundColor: '#1A2E4A', borderWidth: 2, pointRadius: 4
+        },{
+            label: 'Meta estratégica',
+            data: Array(12).fill(100),
+            backgroundColor: 'rgba(5,150,105,0.04)', borderColor: '#059669',
+            borderDash:[6,3], pointRadius: 3, borderWidth: 1.5
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: { r:{ beginAtZero:true, max:100, ticks:{ stepSize:25 } } },
+        plugins: { legend: { position: 'bottom' } }
+    }
+});
+</script>
+</body>
+</html>
